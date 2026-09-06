@@ -1,49 +1,30 @@
 import { useEffect, useMemo, useState } from "react"
 import { StudyContext } from "./StudyContextValue"
 import { useAuth } from "./useAuth"
-
-
-function loadTasks(storageKey) {
-  try {
-    const saved = localStorage.getItem(storageKey)
-    if (!saved) return []
-    return JSON.parse(saved).map((task) => ({
-      ...task,
-      description: task.description || "",
-      category: task.category || "Other",
-      priority: task.priority || "Medium",
-      dueDate: task.dueDate || "",
-      createdAt: task.createdAt || Date.now(),
-    }))
-  } catch {
-    return []
-  }
-}
+import { api } from "../lib/api"
 
 export function StudyProvider({ children }) {
   const { user } = useAuth()
-  const storageKey = user ? `study-flow-tasks-${user.email}` : "study-flow-tasks-guest"
-  const hoursKey = user ? `study-flow-hours-${user.email}` : "study-flow-hours-guest"
-  return <UserStudyData key={storageKey} storageKey={storageKey} hoursKey={hoursKey}>{children}</UserStudyData>
+  return <UserStudyData key={user?.id || "guest"} user={user}>{children}</UserStudyData>
 }
 
-function UserStudyData({ children, storageKey, hoursKey }) {
-  const [tasks, setTasks] = useState(() => loadTasks(storageKey))
+function UserStudyData({ children, user }) {
+  const [tasks, setTasks] = useState([])
   const [theme, setTheme] = useState(() => localStorage.getItem("study-flow-theme") || "light")
-  const [studyHours, setStudyHours] = useState(() => Number(localStorage.getItem(hoursKey) || 0))
+  const [studyHours, setStudyHours] = useState(user?.studyHours || 0)
 
-  useEffect(() => localStorage.setItem(storageKey, JSON.stringify(tasks)), [storageKey, tasks])
+  useEffect(() => { if (user) api.getTasks().then(({ tasks: savedTasks }) => setTasks(savedTasks)).catch(() => setTasks([])) }, [user])
   useEffect(() => {
     localStorage.setItem("study-flow-theme", theme)
     document.documentElement.classList.toggle("dark", theme === "dark")
   }, [theme])
-  useEffect(() => localStorage.setItem(hoursKey, String(studyHours)), [hoursKey, studyHours])
+  const updateStudyHours = (value) => { const nextValue = typeof value === "function" ? value(studyHours) : value; setStudyHours(nextValue); api.updateStudyHours(nextValue).catch(() => {}) }
 
-  const addTask = (task) => setTasks((current) => [...current, { ...task, id: Date.now(), createdAt: Date.now(), completed: false }])
-  const updateTask = (id, changes) => setTasks((current) => current.map((task) => task.id === id ? { ...task, ...changes } : task))
-  const toggleTask = (id) => setTasks((current) => current.map((task) => task.id === id ? { ...task, completed: !task.completed } : task))
-  const deleteTask = (id) => setTasks((current) => current.filter((task) => task.id !== id))
-  const clearTasks = () => setTasks([])
+  const addTask = async (task) => { const { task: savedTask } = await api.addTask(task); setTasks((current) => [savedTask, ...current]) }
+  const updateTask = async (id, changes) => { const { task: savedTask } = await api.updateTask(id, changes); setTasks((current) => current.map((task) => task.id === id ? savedTask : task)) }
+  const toggleTask = async (id) => { const task = tasks.find((item) => item.id === id); if (task) updateTask(id, { completed: !task.completed }) }
+  const deleteTask = async (id) => { await api.deleteTask(id); setTasks((current) => current.filter((task) => task.id !== id)) }
+  const clearTasks = async () => { await api.clearTasks(); setTasks([]) }
 
   const stats = useMemo(() => {
     const completed = tasks.filter((task) => task.completed).length
@@ -51,7 +32,7 @@ function UserStudyData({ children, storageKey, hoursKey }) {
     return { total, completed, pending: total - completed, progress: total ? Math.round((completed / total) * 100) : 0 }
   }, [tasks])
 
-  return <StudyContext.Provider value={{ tasks, addTask, updateTask, toggleTask, deleteTask, clearTasks, theme, setTheme, studyHours, setStudyHours, stats }}>
+  return <StudyContext.Provider value={{ tasks, addTask, updateTask, toggleTask, deleteTask, clearTasks, theme, setTheme, studyHours, setStudyHours: updateStudyHours, stats }}>
     {children}
   </StudyContext.Provider>
 }

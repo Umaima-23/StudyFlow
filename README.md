@@ -1,16 +1,49 @@
-# React + Vite
+# Study Flow
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Study Flow is a React student productivity dashboard backed by Node.js, Express, MongoDB, and JWT authentication.
 
-Currently, two official plugins are available:
+## Requirements
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Node.js 20+
+- MongoDB running locally, or a MongoDB Atlas connection string
 
-## React Compiler
+## Setup
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. Install dependencies:
 
-## Expanding the Oxlint configuration
+```bash
+npm install
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+2. Create a `.env` file from `.env.example` and set:
+
+```env
+MONGODB_URI=mongodb://127.0.0.1:27017/study-flow
+JWT_SECRET=use-a-long-random-secret
+PORT=5000
+CLIENT_URL=http://localhost:5173
+```
+
+3. Run the frontend and backend together:
+
+```bash
+npm run dev
+```
+
+The Vite client runs on `http://localhost:5173` and proxies `/api` requests to the Node server on port 5000.
+
+## API
+
+- `POST /api/auth/signup`
+- `POST /api/auth/signin`
+- `GET /api/auth/me`
+- `GET /api/tasks`
+- `POST /api/tasks`
+- `PATCH /api/tasks/:id`
+- `DELETE /api/tasks/:id`
+- `GET /api/subjects`
+- `POST /api/subjects`
+- `DELETE /api/subjects/:id`
+- `PATCH /api/profile/study-hours`
+
+Passwords are hashed with bcrypt. Private routes require a JWT bearer token. User records, tasks, subjects, and study hours are stored in MongoDB.

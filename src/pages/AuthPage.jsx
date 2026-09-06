@@ -9,13 +9,13 @@ export default function AuthPage() {
   const { signIn, signUp } = useAuth()
   const isSignUp = mode === "signup"
 
-  const submit = (event) => {
+  const submit = async (event) => {
     event.preventDefault()
     setError("")
     if (isSignUp && !form.name.trim()) return setError("Please enter your name.")
     if (!form.email.trim() || !form.password) return setError("Please complete all required fields.")
     if (form.password.length < 6) return setError("Your password must be at least 6 characters.")
-    const result = isSignUp ? signUp(form) : signIn(form)
+    const result = isSignUp ? await signUp(form) : await signIn(form)
     if (result.error) setError(result.error)
   }
 
