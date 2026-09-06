@@ -1,4 +1,5 @@
-const API_URL = import.meta.env.VITE_API_URL || "/api"
+const configuredApiUrl = import.meta.env.VITE_API_URL?.trim().replace(/\/+$/, "")
+const API_URL = configuredApiUrl ? (configuredApiUrl.endsWith("/api") ? configuredApiUrl : `${configuredApiUrl}/api`) : "/api"
 const normalizeTask = (task) => ({ ...task, id: task._id, createdAt: new Date(task.createdAt).getTime() })
 
 async function request(path, options = {}) {

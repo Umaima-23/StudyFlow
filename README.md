@@ -47,3 +47,17 @@ The Vite client runs on `http://localhost:5173` and proxies `/api` requests to t
 - `PATCH /api/profile/study-hours`
 
 Passwords are hashed with bcrypt. Private routes require a JWT bearer token. User records, tasks, subjects, and study hours are stored in MongoDB.
+
+## Deploy Frontend and API to Vercel
+
+Create one Vercel project with the root directory set to `study flow`. Vercel will deploy the Vite app and the Express API function from `api/[...path].js`.
+
+Use these Vercel environment variables:
+
+```env
+MONGODB_URI=your-mongodb-atlas-uri
+JWT_SECRET=your-long-random-secret
+CLIENT_URL=https://your-project.vercel.app
+```
+
+`PORT` is not required on Vercel. Leave `VITE_API_URL` unset when the frontend and API share the same Vercel project; the frontend will use `/api`. If the API is deployed separately, set `VITE_API_URL` to that backend URL.
