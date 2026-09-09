@@ -9,6 +9,7 @@ export default async function handler(request, response) {
   if (!connectionPromise) connectionPromise = mongoose.connect(process.env.MONGODB_URI)
   try {
     await connectionPromise
+    if (!request.url.startsWith("/api")) request.url = `/api${request.url.startsWith("/") ? "" : "/"}${request.url}`
     return app(request, response)
   } catch (error) {
     connectionPromise = null
