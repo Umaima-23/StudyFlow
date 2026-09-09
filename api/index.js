@@ -6,8 +6,9 @@ const app = createApp()
 
 export default async function handler(request, response) {
   try {
-    if (!request.url.startsWith("/api")) request.url = `/api${request.url.startsWith("/") ? "" : "/"}${request.url}`
-    if (request.url === "/api/health") return response.json({ status: "ok" })
+    const requestPath = (request.url || "").split("?", 1)[0]
+    if (!requestPath.startsWith("/api")) request.url = `/api${requestPath.startsWith("/") ? "" : "/"}${requestPath}`
+    if (requestPath === "/api/health" || requestPath === "/health") return response.json({ status: "ok" })
     if (!process.env.MONGODB_URI || !process.env.JWT_SECRET) return response.status(500).json({ message: "Server environment is not configured." })
     if (!connectionPromise) connectionPromise = mongoose.connect(process.env.MONGODB_URI)
     await connectionPromise
